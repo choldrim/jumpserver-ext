@@ -200,7 +200,7 @@ func work() (error) {
         return err
 	}
 
-    defer os.RemoveAll(sessionDir)
+    //defer os.RemoveAll(sessionDir)
 
     log.Println("Downloading session file.")
     sessionFile, err := DownloadSessionFile(token, id, shellType, sessionDir)
