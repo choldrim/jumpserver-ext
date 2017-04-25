@@ -2,3 +2,4 @@
 config.ini
 main
 tmp
+*.zip
