@@ -15,7 +15,7 @@ import (
     "strconv"
     "time"
 
-    "github.com/widuu/goini"
+    "gopkg.in/ini.v1"
 )
 
 var (
@@ -40,23 +40,41 @@ func init() {
 }
 
 func GetServerEndpoint() (string, error) {
-    conf := goini.SetConfig(ConfPath)
-    server := conf.GetValue("Default", "Server")
-    if len(server) == 0 {
-        return "", fmt.Errorf("Error while reading config - server not found in config file")
+    conf, err := ini.LooseLoad(ConfPath)
+    if err != nil {
+        return "", fmt.Errorf("Error while reading config - %s", err)
     }
 
-    return server, nil
+    serverSec, err := conf.GetSection("Default")
+    if err != nil {
+        return "", fmt.Errorf("Error while reading config - %s", err)
+    }
+
+    server, err := serverSec.GetKey("Server")
+    if err != nil {
+        return "", fmt.Errorf("Error while reading config - %s", err)
+    }
+
+    return server.String(), nil
 }
 
 func GetShellExePath(shellType string) (string, error) {
-    conf := goini.SetConfig(ConfPath)
-    path := conf.GetValue(shellType, "Path")
-    if len(path) == 0 {
-        return "", fmt.Errorf("Error while reading config - %s path not found in config file", shellType)
+    conf, err := ini.LooseLoad(ConfPath)
+    if err != nil {
+        return "", fmt.Errorf("Error while reading config - %s", err)
     }
 
-    return path, nil
+    shellSec, err := conf.GetSection(shellType)
+    if err != nil {
+        return "", fmt.Errorf("Error while reading config - %s", err)
+    }
+
+    path, err := shellSec.GetKey("Path")
+    if err != nil {
+        return "", fmt.Errorf("Error while reading config - %s", err)
+    }
+
+    return path.String(), nil
 }
 
 type SessionJson struct {
