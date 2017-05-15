@@ -32,7 +32,7 @@ func init() {
     fileName := path.Join(os.Getenv("TEMP"), "jms.log")
     f, err := os.OpenFile(fileName, os.O_RDWR | os.O_CREATE | os.O_APPEND, 0666)
     if err != nil {
-		log.Fatalln(err)
+        log.Fatalln(err)
     }
 
     log.SetOutput(f)
@@ -205,32 +205,32 @@ func work() (error) {
     params := InputParams{}
     log.Println("Decoding params.")
     err := DecodeParams(encodeStr, &params)
-	if err != nil {
+    if err != nil {
         return err
-	}
+    }
 
     token := params.Token
     id := params.AssetID
     shellType := params.ShellType
 
     sessionDir, err := ioutil.TempDir("", "jms-")
-	if err != nil {
+    if err != nil {
         return err
-	}
+    }
 
     //defer os.RemoveAll(sessionDir)
 
     log.Println("Downloading session file.")
     sessionFile, err := DownloadSessionFile(token, id, shellType, sessionDir)
-	if err != nil {
+    if err != nil {
         return err
-	}
+    }
 
     log.Println("Launching shell.")
     err = LaunchShell(shellType, sessionFile)
-	if err != nil {
-		return err
-	}
+    if err != nil {
+        return err
+    }
 
     return nil
 }
@@ -239,7 +239,7 @@ func work() (error) {
 func main() {
     err := work()
     if err != nil {
-		log.Println(err)
+        log.Println(err)
         time.Sleep(time.Second * 2)
     }
 }
