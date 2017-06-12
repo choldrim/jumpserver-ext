@@ -10,13 +10,17 @@ import (
     "time"
     "strings"
 
+    log "github.com/jbrodriguez/mlog"
+
     "../parameter"
     "../config"
+    "../encrypter"
 )
 
 type SessionJson struct {
     Result string           `json:"result"`
     AssetName string        `json:"asset_name"`
+    Password string         `json:"password"`  // for rdp
     Err bool                `json:"err"`
 }
 
@@ -49,13 +53,34 @@ func downloadSessionFile(token string, assetID int, shellType string, sessionDir
         assetName = path.Base(sessionDir)
     }
 
-    sessionFile := path.Join(sessionDir, assetName) + ".xsh"
+    suffix := getSuffix(shellType)
+    sessionFile := path.Join(sessionDir, assetName) + suffix
+    if shellType == "RDP" {
+        enc, err := encrypter.EncryptPWD(respJson.Password)
+        if err != nil {
+            log.Error(err)
+        }
+
+        respJson.Result = strings.Replace(respJson.Result, "__PASSWORD__", enc, -1)
+    }
+
     err = ioutil.WriteFile(sessionFile, []byte(respJson.Result), 0644)
     if err != nil {
         return "", fmt.Errorf("Error while writing %s - %s", sessionFile, err)
     }
 
     return sessionFile, nil
+}
+
+func getSuffix(shellType string) string {
+    switch shellType {
+        case "XShell":
+            return ".xsh"
+        case "RDP":
+            return ".rdp"
+        default:
+            return ""
+    }
 }
 
 func getJson(token string, assetID int, shellType string, target *SessionJson) error {
