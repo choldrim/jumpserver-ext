@@ -2,13 +2,16 @@ package main
 
 import (
     "time"
-
-    _ "./lib/logger"
-    "./lib/parameter"
-    "./lib/session"
-    "./lib/launcher"
+    "sync"
 
     log "github.com/jbrodriguez/mlog"
+
+    _ "./lib/logger"
+    "./lib/config"
+    "./lib/launcher"
+    "./lib/parameter"
+    "./lib/session"
+    "./lib/updater"
 )
 
 
@@ -41,9 +44,21 @@ func work() (error) {
 
 
 func main() {
+    config.Version = Version
+    log.Info("Start up, current version is %s", Version)
+
+    var wg sync.WaitGroup
+    wg.Add(1)
+    go func() {
+        updater.Check()
+        defer wg.Done()
+    }()
+
     err := work()
     if err != nil {
         log.Error(err)
         time.Sleep(time.Second * 2)
     }
+
+    wg.Wait()
 }
