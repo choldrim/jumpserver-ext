@@ -6,8 +6,9 @@ import (
     "os"
 
     log "github.com/jbrodriguez/mlog"
-
     "gopkg.in/ini.v1"
+
+    _ "../logger"
 )
 
 var (
@@ -22,69 +23,60 @@ var (
 
     // config path
     confPath = path.Join(path.Join(os.Getenv("APPDATA"), "Jumpserver"), "config.ini")
+
+    // check update URL
+    CheckUpdateURL = ServerEndpoint + "/api/extension/v1/check-update"
 )
 
 func init() {
-    serverEndpoint, err := getServerEndpoint()
+    serverEndpoint, err := tryToGetFromConf("Default", "Server")
     if err != nil {
-        log.Error(err)
+        log.Warning("%s", err)
     } else {
         ServerEndpoint = serverEndpoint
     }
 
-    initExecPaths()
-}
-
-func getServerEndpoint() (string, error) {
-    conf, err := ini.LooseLoad(confPath)
-    if err != nil {
-        return "", fmt.Errorf("Error while reading config - %s", err)
-    }
-
-    serverSec, err := conf.GetSection("Default")
-    if err != nil {
-        return "", fmt.Errorf("Error while reading config - %s", err)
-    }
-
-    server, err := serverSec.GetKey("Server")
-    if err != nil {
-        return "", fmt.Errorf("Error while reading config - %s", err)
-    }
-
-    return server.String(), nil
-}
-
-func initExecPaths() {
-    xshellExec, err := getExecPath("XShell")
+    xshellExec, err := tryToGetFromConf("XShell", "Path")
     if err != nil {
         log.Warning("%s", err)
     } else {
         XShellExec = xshellExec
     }
 
-    secureCRT, err := getExecPath("SecureCRT")
+    secureCRT, err := tryToGetFromConf("SecureCRT", "Path")
     if err != nil {
         log.Warning("%s", err)
     } else {
         SecureCRTExec = secureCRT
     }
+
+    checkUpdateURL, err := tryToGetFromConf("Update", "CheckURL")
+    if err != nil {
+        log.Warning("%s", err)
+    } else {
+        CheckUpdateURL = checkUpdateURL
+    }
 }
 
-func getExecPath(execType string) (string, error) {
+func tryToGetFromConf(section, key string) (string, error) {
+    if _, err := os.Stat(confPath); os.IsNotExist(err) {
+        return "", fmt.Errorf("config %s not exist", err)
+    }
+
     conf, err := ini.LooseLoad(confPath)
     if err != nil {
         return "", fmt.Errorf("Error while reading config - %s", err)
     }
 
-    execPath, err := conf.GetSection(execType)
+    sec, err := conf.GetSection(section)
     if err != nil {
         return "", fmt.Errorf("Error while reading config - %s", err)
     }
 
-    path, err := execPath.GetKey("Path")
+    val, err := sec.GetKey(key)
     if err != nil {
         return "", fmt.Errorf("Error while reading config - %s", err)
     }
 
-    return path.String(), nil
+    return val.String(), nil
 }
